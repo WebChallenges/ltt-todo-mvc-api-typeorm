@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../shared/auth.guard';
 import { User } from '../shared/user.decorator';
-import { CreateTodoInput } from './dto/create-todo.input';
-import { Todo } from './dto/todo.type';
-import { UpdateTodoInput } from './dto/update-todo.input';
+import {
+  CreateTodoInput,
+  TodoRO,
+  UpdateTodoInput,
+} from './interfaces/todo.dto';
 import { TodoService } from './todo.service';
 
 @Controller('todos')
@@ -23,7 +25,7 @@ export class TodoController {
 
   @Get()
   @UseGuards(AuthGuard)
-  async showAllTodos(@User('id') id: string): Promise<Todo[]> {
+  async showAllTodos(@User('id') id: string): Promise<TodoRO[]> {
     return this.todoService.showAll(id);
   }
 
@@ -32,7 +34,7 @@ export class TodoController {
   async getTodo(
     @User('id') id: string,
     @Param('todoId') todoId: string,
-  ): Promise<Todo> {
+  ): Promise<TodoRO> {
     return this.todoService.getOne(id, todoId);
   }
 
@@ -41,7 +43,7 @@ export class TodoController {
   async createTodo(
     @User('id') id: string,
     @Body() data: CreateTodoInput,
-  ): Promise<Todo> {
+  ): Promise<TodoRO> {
     return this.todoService.create(id, data);
   }
 
@@ -51,7 +53,7 @@ export class TodoController {
     @User('id') id: string,
     @Param('todoId') todoId: string,
     @Body() data: UpdateTodoInput,
-  ): Promise<Todo> {
+  ): Promise<TodoRO> {
     return this.todoService.update(id, todoId, data);
   }
 

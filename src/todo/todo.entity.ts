@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { BaseEntity } from '../shared/base.entity';
+import BaseEntity from '../shared/base.entity';
 import { UserEntity } from '../user/user.entity';
-import { Todo } from './dto/todo.type';
+import { TodoRO } from './interfaces/todo.dto';
 import { TodoStatus } from './todo.enum';
 
 @Entity('todos')
@@ -18,7 +18,7 @@ export class TodoEntity extends BaseEntity {
   )
   user: UserEntity;
 
-  toResponseObject(): Todo {
+  toResponseObject(): TodoRO {
     const { id, user, content, status, created_at, updated_at } = this;
 
     return {

@@ -8,9 +8,9 @@ import {
   Entity,
   OneToMany,
 } from 'typeorm';
-import { BaseEntity } from '../shared/base.entity';
+import BaseEntity from '../shared/base.entity';
 import { TodoEntity } from '../todo/todo.entity';
-import { User } from './dto/user.type';
+import { UserRO } from './interfaces/user.dto';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
@@ -61,7 +61,7 @@ export class UserEntity extends BaseEntity {
       this.password = await bcrypt.hash(this.password, 10);
   }
 
-  toResponseObject(options: { showToken?: boolean } = {}): User {
+  toResponseObject(options: { showToken?: boolean } = {}): UserRO {
     const { id, username, created_at, updated_at, token } = this;
     const baseResponse = { id, username, created_at, updated_at };
     if (options?.showToken) {

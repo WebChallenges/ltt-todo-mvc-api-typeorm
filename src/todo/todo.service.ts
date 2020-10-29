@@ -1,62 +1,42 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserEntity } from '../user/user.entity';
-import { CreateTodoInput } from './dto/create-todo.input';
-import { Todo } from './dto/todo.type';
-import { UpdateTodoInput } from './dto/update-todo.input';
-import { TodoEntity } from './todo.entity';
-import { TodoStatus } from './todo.enum';
+import { UserRepository } from '../user/user.repository';
+import {
+  CreateTodoInput,
+  TodoRO,
+  UpdateTodoInput,
+} from './interfaces/todo.dto';
+import { TodoRepository } from './todo.repository';
 
 @Injectable()
 export class TodoService {
   constructor(
-    @InjectRepository(TodoEntity)
-    private readonly todoRepository: Repository<TodoEntity>,
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(TodoRepository)
+    private readonly todoRepository: TodoRepository,
+    @InjectRepository(UserRepository)
+    private readonly userRepository: UserRepository,
   ) {}
 
-  async showAll(userId: string): Promise<Todo[]> {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: userId,
-      },
-    });
-    const todos = await this.todoRepository.find({
-      where: { user },
-      relations: ['user'],
-    });
+  async showAll(userId: string): Promise<TodoRO[]> {
+    const user = await this.userRepository.findById(userId);
+    const todos = await this.todoRepository.findByUser(user);
     return todos.map(todo => todo.toResponseObject());
   }
 
-  async getOne(userId: string, todoId: string): Promise<Todo> {
-    const todo = await this.todoRepository.findOne(
-      {
-        id: todoId,
-      },
-      {
-        relations: ['user'],
-      },
-    );
+  async getOne(userId: string, todoId: string): Promise<TodoRO> {
+    const todo = await this.todoRepository.findById(todoId);
     if (!todo) throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     if (!todo.isBelongsTo(userId))
       throw new HttpException('Forbidden resource', HttpStatus.FORBIDDEN);
     return todo.toResponseObject();
   }
 
-  async create(userId: string, data: CreateTodoInput): Promise<Todo> {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: userId,
-      },
-    });
-    const todo = this.todoRepository.create({
+  async create(userId: string, data: CreateTodoInput): Promise<TodoRO> {
+    const user = await this.userRepository.findById(userId);
+    const todo = await this.todoRepository.createTodo({
       ...data,
       user,
-      status: TodoStatus.ACTIVE,
     });
-    await this.todoRepository.save(todo);
     return todo.toResponseObject();
   }
 
@@ -64,32 +44,13 @@ export class TodoService {
     userId: string,
     todoId: string,
     data: UpdateTodoInput,
-  ): Promise<Todo> {
-    const todo = await this.todoRepository.findOne({
-      where: {
-        id: todoId,
-      },
-      relations: ['user'],
-    });
+  ): Promise<TodoRO> {
+    const todo = await this.todoRepository.findById(todoId);
     if (!todo) throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     if (!todo.isBelongsTo(userId))
       throw new HttpException('Forbidden resource', HttpStatus.FORBIDDEN);
 
-    const updatedData = new TodoEntity();
-    updatedData.status = data.status;
-
-    const { generatedMaps } = await this.todoRepository.update(
-      {
-        id: todoId,
-      },
-      updatedData,
-    );
-
-    const updatedTodo = await this.todoRepository.findOne({
-      where: {
-        id: todoId,
-      },
-    });
+    const updatedTodo = await this.todoRepository.updateTodo(todoId, data);
 
     return {
       id: todoId,
@@ -99,14 +60,7 @@ export class TodoService {
   }
 
   async delete(userId: string, todoId: string) {
-    const todo = await this.todoRepository.findOne(
-      {
-        id: todoId,
-      },
-      {
-        relations: ['user'],
-      },
-    );
+    const todo = await this.todoRepository.findById(todoId);
     if (!todo) throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     if (!todo.isBelongsTo(userId))
       throw new HttpException('Forbidden resource', HttpStatus.FORBIDDEN);
