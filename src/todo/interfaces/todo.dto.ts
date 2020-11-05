@@ -11,7 +11,6 @@ export class TodoRO {
 
   @ApiProperty({
     type: UserRO,
-    nullable: true,
   })
   user?: UserRO;
 

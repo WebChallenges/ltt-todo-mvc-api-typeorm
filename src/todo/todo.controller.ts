@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -53,6 +54,7 @@ export class TodoController {
 
   @ApiOperation({ summary: 'Create a new todo' })
   @ApiBearerAuth()
+  @ApiBody({ type: CreateTodoInput })
   @ApiResponse({ status: 200, type: TodoRO })
   @Post()
   @UseGuards(AuthGuard)
@@ -65,6 +67,7 @@ export class TodoController {
 
   @ApiOperation({ summary: 'Update existed todo' })
   @ApiBearerAuth()
+  @ApiBody({ type: UpdateTodoInput })
   @ApiResponse({ status: 200, type: TodoRO })
   @Put('/:id')
   @UseGuards(AuthGuard)
