@@ -35,7 +35,8 @@ export class TodoRepository extends Repository<TodoEntity> {
 
   async updateTodo(id: string, data: UpdateTodoInput) {
     const updatedData = new TodoEntity();
-    updatedData.status = data.status;
+    if (data.status) updatedData.status = data.status;
+    if (data.content) updatedData.content = data.content;
 
     await this.update(
       {
