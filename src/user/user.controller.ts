@@ -1,11 +1,19 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoginInput, RegisterInput, UserRO } from './interfaces/user.dto';
 import { UserService } from './user.service';
+
 @ApiTags('User')
 @Controller()
 export class UserController {
   constructor(private userService: UserService) {}
+
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, type: UserRO })
+  @Get('/api/users')
+  async findAll(): Promise<UserRO[]> {
+    return await this.userService.findAll();
+  }
 
   @ApiOperation({ summary: 'Login' })
   @ApiResponse({ status: 200, type: UserRO })
