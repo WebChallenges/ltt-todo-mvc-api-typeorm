@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { serialize } from 'class-transformer';
+import { PaginationQuery, PaginationResultRO } from 'src/paginate';
 import { UserRepository } from '../user/user.repository';
 import {
   CreateTodoInput,
@@ -17,10 +19,26 @@ export class TodoService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async showAll(userId: string): Promise<TodoRO[]> {
+  async paginate(
+    userId: string,
+    query: PaginationQuery,
+  ): Promise<PaginationResultRO<TodoRO>> {
     const user = await this.userRepository.findById(userId);
-    const todos = await this.todoRepository.findByUser(user);
-    return todos.map(todo => todo.toResponseObject());
+    const skippedItems = (query.page - 1) * query.limit;
+    const items = await this.todoRepository.find({
+      where: { user },
+      relations: ['user'],
+      order: {
+        created_at: 'DESC',
+      },
+      skip: skippedItems,
+      take: query.limit,
+    });
+    return {
+      items: items.map(item => JSON.parse(serialize(item))),
+      page: +query.page,
+      totalCount: items.length,
+    };
   }
 
   async getOne(userId: string, todoId: string): Promise<TodoRO> {

@@ -8,15 +8,19 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { PaginationQuery } from 'src/paginate';
+import { PaginationResultRO } from 'src/paginate/pagination-result.dto';
 import { AuthGuard } from '../shared/auth.guard';
 import { User } from '../shared/user.decorator';
 import {
@@ -33,11 +37,27 @@ export class TodoController {
 
   @ApiOperation({ summary: 'Show all todos' })
   @ApiBearerAuth()
-  @ApiResponse({ status: 200, type: TodoRO })
+  @ApiResponse({ status: 200, type: PaginationResultRO })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+  })
   @Get()
   @UseGuards(AuthGuard)
-  async showAllTodos(@User('id') id: string): Promise<TodoRO[]> {
-    return this.todoService.showAll(id);
+  async showAllTodos(
+    @User('id') id: string,
+    @Query() paginationQuery: PaginationQuery,
+  ): Promise<PaginationResultRO<TodoRO>> {
+    return await this.todoService.paginate(id, {
+      limit: paginationQuery.limit ?? 10,
+      page: paginationQuery.page ?? 1,
+    });
   }
 
   @ApiOperation({ summary: 'Get todo' })
